@@ -1,11 +1,11 @@
 import {StringState} from "./base/StringState.svelte.js";
 import {snapshotService} from "../services/SnapshotService";
-import {FAILED_MERGE, genKey, MergeResult, type State} from "./base/State";
-import  { Limit} from "../services/KeyboardService";
+import {FAILED_MERGE, genKey, RemovalResult, type State} from "./base/State";
+import  { Limit} from "../services/TextEventsService.svelte";
 
 export class TitleState extends StringState implements State {
     private _size = $state<number>(1)
-    readonly key: number
+    readonly key: string
 
     constructor(size: number, value: string) {
         super(value)
@@ -23,13 +23,12 @@ export class TitleState extends StringState implements State {
         this._size = v
     }
 
-
-    public merge(other: Readonly<State>, start: Limit | 0, end?: Limit): MergeResult {
+    public merge(other: Readonly<State>, start: Limit | 0, end?: Limit): RemovalResult {
         if (other instanceof TitleState) {
             let s = start === 0 ? 0 : start.offset
             let e = end ? end.offset : this.value.length
 
-            return new MergeResult(true,
+            return new RemovalResult(true,
                 super.mergestr(other.value, s, e)
             )
         }

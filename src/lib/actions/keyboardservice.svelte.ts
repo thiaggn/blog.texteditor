@@ -1,11 +1,11 @@
-import {keyboardService} from "../services/KeyboardService";
+import {textEventsService} from "../services/TextEventsService.svelte";
 
 export function keyboardservice(node: Node) {
-    keyboardService.listen()
+    textEventsService.listen()
 
     return {
         destroy: function () {
-            keyboardService.stop()
+            textEventsService.stop()
         }
     }
 }

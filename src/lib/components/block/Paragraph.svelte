@@ -3,10 +3,9 @@
 	import type {ParagraphState} from "../../states/ParagraphState.svelte";
 
 	let p: { paragraph: ParagraphState, index: number } = $props()
-
 </script>
 
-<div class="text">
+<div class="text" id={p.paragraph.key}>
 	{#each p.paragraph.words as word, i (word.key)}
 		<Word word={word} block={p.index} index={i}/>
 	{/each}

@@ -3,6 +3,7 @@
 	import {keyboardservice} from "../actions/keyboardservice.svelte.js";
 	import {editorState} from "../states/base/EditorState.svelte.js";
 
+
 </script>
 
 <div class="page minimal-scrollbar" contenteditable use:keyboardservice>

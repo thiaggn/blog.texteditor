@@ -1,16 +1,16 @@
-import {indexService} from "../services/IndexService";
+import {Address, locationService} from "../services/AdressingService";
 import type {ActionReturn} from "svelte/action";
 
-export function sharedstate(node: Node, indexes: number[]): ActionReturn<number[]>{
-    indexService.set(node, indexes)
+export function sharedstate(node: Node, index: Address): ActionReturn<Address>{
+    locationService.set(node, index)
 
     return {
         destroy: function () {
-            indexService.remove(node)
+            locationService.remove(node)
         },
 
-        update: function (indexes: number[]) {
-            indexService.set(node, indexes)
+        update: function (index: Address) {
+            locationService.set(node, index)
         }
     }
 }

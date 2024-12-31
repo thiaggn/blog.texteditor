@@ -1,6 +1,6 @@
 import {StringState} from "./base/StringState.svelte.js";
-import {FAILED_MERGE, genKey, MergeResult, type State} from "./base/State";
-import {Limit} from "../services/KeyboardService";
+import {FAILED_MERGE, genKey, RemovalResult, type State} from "./base/State";
+import {Limit} from "../services/TextEventsService.svelte";
 
 export enum WordFormat {
     Bold,
@@ -11,7 +11,7 @@ export enum WordFormat {
 
 export class WordState extends StringState implements State {
     readonly format: WordFormat
-    readonly key: number
+    readonly key: string
 
     constructor(format: WordFormat, value: string) {
         super(value);
@@ -21,10 +21,10 @@ export class WordState extends StringState implements State {
 
     private reinterpret(start: Limit | 0, end?: Limit): [Limit, Limit] {
         if (start instanceof Limit && end == undefined)
-            return [start, new Limit(start.indexes, this.value.length)]
+            return [start, new Limit(start.address, this.value.length)]
 
         else if (start === 0 && end != undefined)
-            return [new Limit(end.indexes, 0), end]
+            return [new Limit(end.address, 0), end]
 
         else if (start instanceof Limit && end instanceof Limit)
             return [start, end]
@@ -32,17 +32,14 @@ export class WordState extends StringState implements State {
         else throw new Error("unhandled case")
     }
 
-    public merge(other: Readonly<State>, start: Limit | 0, end?: Limit): MergeResult {
+    public merge(other: Readonly<State>, start: Limit | 0, end?: Limit): RemovalResult {
         [start, end] = this.reinterpret(start, end);
 
         if (other instanceof WordState && other.format == this.format) {
-
-            return new MergeResult(true,
-                super.mergestr(other.value, start.offset, end.offset)
-            )
+            let len = super.mergestr(other.value, start.offset, end.offset)
+            return new RemovalResult(true,len)
         }
 
         return FAILED_MERGE
     }
-
 }

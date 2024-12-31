@@ -1,4 +1,4 @@
-import {type Limit} from "../../services/KeyboardService";
+import {type Limit} from "../../services/TextEventsService.svelte";
 import {snapshotService} from "../../services/SnapshotService";
 import {type State} from "./State";
 import {BLOCKS_PLACEHOLDER} from "../../placeholder/blocks";
@@ -32,6 +32,7 @@ export class EditorState {
     }
 
     public crop(start: Limit, end: Limit) {
+        
         const sb = this.blocks[start.blockIndex]
         const eb = this.blocks[end.blockIndex]
 

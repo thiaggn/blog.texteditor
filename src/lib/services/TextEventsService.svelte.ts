@@ -1,36 +1,44 @@
-import {indexService} from "./IndexService";
-
+import {Address} from "./AdressingService";
 import {snapshotService} from "./SnapshotService";
-import {StringState} from "../states/base/StringState.svelte";
 import {editorState} from "../states/base/EditorState.svelte.js";
-import type {State} from "../states/base/State";
-
-enum Mode {
-    Caret,
-    Range
-}
+import {Mode, selectionService} from "./SelectionService.svelte";
 
 enum Direction {
     Left,
     Right
 }
 
-
 export class Limit {
-    public indexes: number[]
+    public address: Address
     public offset: number
 
-    constructor(indexes: number[], offset: number) {
-        this.indexes = indexes
+    constructor(location: Address, offset: number) {
+        this.address = location
         this.offset = offset
     }
 
     get blockIndex() {
-        return this.indexes[0]
+        return this.address.indexes[0]
     }
 
     get wordIndex() {
-        return this.indexes[1]
+        return this.address.indexes[1]
+    }
+
+    set wordIndex(value: number) {
+        this.address.indexes[1] = value
+    }
+
+    get indexes(): number[] {
+        return this.address.indexes
+    }
+
+    get key(): string {
+        return this.address.key
+    }
+
+    set key(k: string) {
+        this.address.key = k
     }
 }
 
@@ -45,61 +53,20 @@ export class Selection {
         this.mode = mode
     }
 
-    get current(): Limit {
-        return this.left
-    }
-
     public moveOffset(dir: Direction): void {
         this.left.offset += dir == Direction.Left ? -1 : 0
         this.right.offset += dir == Direction.Right ? +1 : 0
     }
 }
 
-class KeyboardService {
+class TextEventsService {
     private evlistener: (ev: KeyboardEvent) => void
 
     constructor() {
         this.evlistener = this.handleKeyEvent.bind(this)
     }
 
-    private getSelection(): Selection | null {
-        const s = getSelection();
-        if (s == undefined) throw new Error("(Editor) Failed to get selection because window didn't return one");
-
-        let anchorPar = s.anchorNode?.parentNode;
-        let anchorOff = s.anchorOffset;
-
-        let focusPar = s.focusNode?.parentNode;
-        let focusOff = s.focusOffset;
-
-        if (anchorPar && focusPar) {
-            if (anchorPar.compareDocumentPosition(focusPar) & Node.DOCUMENT_POSITION_FOLLOWING) {
-            } else if (anchorPar === focusPar) {
-                if (s.anchorOffset > s.focusOffset) {
-                    [anchorPar, focusPar] = [focusPar, anchorPar];
-                    [anchorOff, focusOff] = [focusOff, anchorOff];
-                }
-            } else {
-                [anchorPar, focusPar] = [focusPar, anchorPar];
-                [anchorOff, focusOff] = [focusOff, anchorOff];
-            }
-
-            const aIndexes = indexService.get(anchorPar)
-            const fIndexes = indexService.get(focusPar)
-
-            if (aIndexes && fIndexes) {
-                let left = new Limit(aIndexes, anchorOff)
-                let right = new Limit(fIndexes, focusOff)
-
-                const mode = s.type == "Range" ? Mode.Range : Mode.Caret
-                return new Selection(left, right, mode)
-            }
-        }
-
-        return null
-    }
-
-    private handleRemoval(sel: Selection, dir: Direction) {
+    private async handleRemoval(sel: Selection, dir: Direction) {
         if (sel.mode == Mode.Caret) {
             sel.moveOffset(dir)
             editorState.crop(sel.left, sel.right)
@@ -109,16 +76,16 @@ class KeyboardService {
         }
     }
 
-    private handleKeyEvent(ev: KeyboardEvent): void {
-        const sel = this.getSelection()
+    private async handleKeyEvent(ev: KeyboardEvent): Promise<void> {
+        const sel = selectionService.capture()
         let key = ev.key.toLowerCase()
 
         if (ev.ctrlKey) {
             if (key == "z") {
                 ev.preventDefault()
                 snapshotService.back()
-            }
-            else if (key == "y") {
+
+            } else if (key == "y") {
                 ev.preventDefault()
                 snapshotService.forward()
             }
@@ -128,12 +95,12 @@ class KeyboardService {
             switch (key) {
                 case "backspace":
                     ev.preventDefault()
-                    this.handleRemoval(sel, Direction.Left)
+                    await this.handleRemoval(sel, Direction.Left)
                     break
 
                 case "delete":
                     ev.preventDefault()
-                    this.handleRemoval(sel, Direction.Right)
+                    await this.handleRemoval(sel, Direction.Right)
                     break
 
                 case "enter":
@@ -168,4 +135,4 @@ class KeyboardService {
     }
 }
 
-export const keyboardService = new KeyboardService()
+export const textEventsService = new TextEventsService()
