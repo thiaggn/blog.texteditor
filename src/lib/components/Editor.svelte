@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Block from "./block/Block.svelte";
-	import {keyboardservice} from "../actions/keyboardservice.js";
+	import {keyboardservice} from "../actions/keyboardservice.svelte.js";
 	import {editorState} from "../states/base/EditorState.svelte.js";
 
 </script>

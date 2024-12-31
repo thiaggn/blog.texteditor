@@ -1,12 +1,10 @@
 <script lang="ts">
 	import Title from "./Title.svelte";
-
 	import Paragraph from "./Paragraph.svelte";
 	import {TitleState} from "../../states/TitleState.svelte";
 	import {ParagraphState} from "../../states/ParagraphState.svelte";
 	import type {State} from "../../states/base/State";
 	let p: { block: State, index: number } = $props()
-
 </script>
 
 <div class="block" role="none">

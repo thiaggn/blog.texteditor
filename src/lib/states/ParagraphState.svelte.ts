@@ -39,13 +39,16 @@ export class ParagraphState implements State {
     }
 
     private reinterpret(start: Limit | 0, end?: Limit): [Limit, Limit] {
-        if (start instanceof Limit && end == undefined) {
-            return [start, new Limit(start.ref, this.last.value.length)]
-        } else if (start === 0 && end != undefined) {
-            return [new Limit(end.ref, 0), end]
-        } else if (start instanceof Limit && end instanceof Limit) {
+        if (start instanceof Limit && end == undefined)
+            return [start, new Limit(start.indexes, this.last.value.length)]
+
+        else if (start === 0 && end != undefined)
+            return [new Limit(end.indexes, 0), end]
+
+        else if (start instanceof Limit && end instanceof Limit)
             return [start, end]
-        } else throw new Error("unhandled case")
+
+        else throw new Error("unhandled case")
     }
 
     public merge(other: Readonly<State>, start: Limit | 0, end?: Limit): MergeResult {

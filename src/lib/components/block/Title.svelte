@@ -1,14 +1,14 @@
 <script lang="ts">
-	import {sharedstate} from "../../actions/sharedstate.js";
-	import {Reference} from "../../services/ReferenceService";
+	import {sharedstate} from "../../actions/sharedstate.svelte.js";
 	import type {TitleState} from "../../states/TitleState.svelte";
 
 	let p: {title: TitleState, index: number} = $props()
-	let state = $derived(new Reference(p.title, [p.index]))
+	let indexes = $derived([p.index])
+
 </script>
 
 <div class="title">
-	<div class="content" use:sharedstate="{state}">
+	<div class="content" use:sharedstate="{indexes}">
 		{p.title.value}
 	</div>
 </div>

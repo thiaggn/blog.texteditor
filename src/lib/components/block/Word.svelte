@@ -1,6 +1,5 @@
 <script lang="ts">
-	import {sharedstate} from "../../actions/sharedstate.js";
-	import {Reference} from "../../services/ReferenceService";
+	import {sharedstate} from "../../actions/sharedstate.svelte.js";
 	import {WordFormat, type WordState} from "../../states/WordState.svelte";
 
 	let p: {
@@ -9,12 +8,12 @@
 		index: number
 	} = $props()
 
-	let state = $derived(new Reference(p.word, [p.block, p.index]))
 	let bold = $derived(p.word.format == WordFormat.Bold)
+	let indexes = $derived([p.block, p.index])
 </script>
 
 <div class="word" class:bold>
-	<div class="content" use:sharedstate="{state}">
+	<div class="content" use:sharedstate="{indexes}">
 		{p.word.value}
 	</div>
 </div>

@@ -1,4 +1,4 @@
-import {Reference, stateService} from "./ReferenceService";
+import {indexService} from "./IndexService";
 
 import {snapshotService} from "./SnapshotService";
 import {StringState} from "../states/base/StringState.svelte";
@@ -17,40 +17,20 @@ enum Direction {
 
 
 export class Limit {
-    public ref: Reference
-    readonly offset: number
+    public indexes: number[]
+    public offset: number
 
-    constructor(ref: Reference, offset: number) {
-        this.ref = ref
+    constructor(indexes: number[], offset: number) {
+        this.indexes = indexes
         this.offset = offset
     }
 
-    public copy(): Limit {
-        const n = new Limit(this.ref, this.offset)
-        n.ref.indexes = n.ref.indexes.slice()
-        return n
-    }
-
     get blockIndex() {
-        return this.ref.indexes[0]
+        return this.indexes[0]
     }
 
     get wordIndex() {
-        return this.ref.indexes[1]
-    }
-
-    get block() {
-        return this.ref.root
-    }
-
-    get leaf() {
-        return this.ref.leaf
-    }
-
-    public moveOne(count: number): Limit {
-        const newRef = new Reference(this.ref.leaf, this.ref.indexes)
-        newRef.root = this.ref.root
-        return new Limit(newRef, this.offset + count)
+        return this.indexes[1]
     }
 }
 
@@ -69,10 +49,9 @@ export class Selection {
         return this.left
     }
 
-    public moveOffset(dir: Direction): Selection {
-        let lo = dir == Direction.Left ? -1 : 0
-        let ro = dir == Direction.Right ? +1 : 0
-        return new Selection(this.left.moveOne(lo), this.right.moveOne(ro), this.mode)
+    public moveOffset(dir: Direction): void {
+        this.left.offset += dir == Direction.Left ? -1 : 0
+        this.right.offset += dir == Direction.Right ? +1 : 0
     }
 }
 
@@ -105,12 +84,12 @@ class KeyboardService {
                 [anchorOff, focusOff] = [focusOff, anchorOff];
             }
 
-            const anchor = stateService.get(anchorPar)
-            const focus = stateService.get(focusPar)
+            const aIndexes = indexService.get(anchorPar)
+            const fIndexes = indexService.get(focusPar)
 
-            if (anchor && focus) {
-                let left = new Limit(anchor, anchorOff)
-                let right = new Limit(focus, focusOff)
+            if (aIndexes && fIndexes) {
+                let left = new Limit(aIndexes, anchorOff)
+                let right = new Limit(fIndexes, focusOff)
 
                 const mode = s.type == "Range" ? Mode.Range : Mode.Caret
                 return new Selection(left, right, mode)
@@ -121,10 +100,9 @@ class KeyboardService {
     }
 
     private handleRemoval(sel: Selection, dir: Direction) {
-
         if (sel.mode == Mode.Caret) {
-            const s = sel.moveOffset(dir)
-            sel.current.block.crop(s.left, s.right)
+            sel.moveOffset(dir)
+            editorState.crop(sel.left, sel.right)
 
         } else if (sel.mode == Mode.Range) {
             editorState.crop(sel.left, sel.right)
@@ -135,9 +113,15 @@ class KeyboardService {
         const sel = this.getSelection()
         let key = ev.key.toLowerCase()
 
-        if (ev.ctrlKey ) {
-            if (key == "z") snapshotService.back()
-            else if (key == "y") snapshotService.forward()
+        if (ev.ctrlKey) {
+            if (key == "z") {
+                ev.preventDefault()
+                snapshotService.back()
+            }
+            else if (key == "y") {
+                ev.preventDefault()
+                snapshotService.forward()
+            }
         }
 
         if (sel != null) {

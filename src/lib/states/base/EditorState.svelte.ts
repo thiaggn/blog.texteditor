@@ -12,10 +12,6 @@ export class EditorState {
         this.title = title
     }
 
-    public getBlock(i: number): State {
-        return this._blocks[i]
-    }
-
     get title() {
         return this._title
     }
@@ -36,8 +32,8 @@ export class EditorState {
     }
 
     public crop(start: Limit, end: Limit) {
-        const sb = start.block
-        const eb = end.block
+        const sb = this.blocks[start.blockIndex]
+        const eb = this.blocks[end.blockIndex]
 
         if (start.blockIndex == end.blockIndex) {
             sb.crop(start, end)
@@ -66,4 +62,4 @@ export class EditorState {
     }
 }
 
-export const editorState = new EditorState("Bem vindo ao editor", BLOCKS_PLACEHOLDER)
+export const editorState = $state(new EditorState("Bem vindo ao editor", BLOCKS_PLACEHOLDER))

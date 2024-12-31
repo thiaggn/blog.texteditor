@@ -2,7 +2,6 @@ import {StringState} from "./base/StringState.svelte.js";
 import {snapshotService} from "../services/SnapshotService";
 import {FAILED_MERGE, genKey, MergeResult, type State} from "./base/State";
 import  { Limit} from "../services/KeyboardService";
-import {Reference} from "../services/ReferenceService";
 
 export class TitleState extends StringState implements State {
     private _size = $state<number>(1)
