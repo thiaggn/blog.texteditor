@@ -1,7 +1,7 @@
 <script lang="ts">
-	import {sharedstate} from "../../actions/sharedstate.svelte.js";
-	import {WordFormat, type WordState} from "../../states/WordState.svelte";
-	import {Address} from "../../services/AdressingService";
+	import {sharedstate} from "../actions/sharedstate.svelte.js";
+	import {WordFormat, type WordState} from "../states/WordState.svelte";
+	import {Address} from "../services/AdressingService";
 
 	let p: {
 		word: WordState,
@@ -27,6 +27,7 @@
 	.word {
 		display: inline;
 		white-space: pre-wrap;
+
 
 		@keyframes blink {
 			from {

@@ -1,5 +1,5 @@
 import {locationService} from "./AdressingService";
-import {Limit, Selection} from "./TextEventsService.svelte";
+import {Limit, Selection} from "./KeyboardService.svelte.js";
 import {tick} from "svelte";
 
 export enum Mode {
@@ -9,6 +9,11 @@ export enum Mode {
 
 
 class SelectionService {
+
+    constructor() {
+
+    }
+
     public applyCollapsed(key: string, offset: number = 0) {
         tick().then(() => {
             const el = document.getElementById(key)?.firstChild
@@ -18,6 +23,8 @@ class SelectionService {
                 s.setBaseAndExtent(
                     el, offset, el, offset
                 )
+            } else {
+                console.log("não conseguiu", el, s)
             }
         })
     }
@@ -48,12 +55,12 @@ class SelectionService {
             [anchorOff, focusOff] = [focusOff, anchorOff];
         }
 
-        const aIndex = locationService.get(anchorPar)
-        const fIndex = locationService.get(focusPar)
+        const startAddr = locationService.get(anchorPar)
+        const endAddr = locationService.get(focusPar)
 
-        if (aIndex && fIndex) {
-            let left = new Limit(aIndex, anchorOff)
-            let right = new Limit(fIndex, focusOff)
+        if (startAddr && endAddr) {
+            let left = new Limit([...startAddr.indexes, anchorOff], startAddr.key)
+            let right = new Limit([...endAddr.indexes, focusOff], startAddr.key)
 
             const mode = s.type == "Range" ? Mode.Range : Mode.Caret
             return new Selection(left, right, mode)

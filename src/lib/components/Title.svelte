@@ -1,7 +1,7 @@
 <script lang="ts">
-	import {sharedstate} from "../../actions/sharedstate.svelte.js";
-	import type {TitleState} from "../../states/TitleState.svelte";
-	import {Address} from "../../services/AdressingService";
+	import {sharedstate} from "../actions/sharedstate.svelte.js";
+	import type {TitleState} from "../states/TitleState.svelte";
+	import {Address} from "../services/AdressingService";
 
 	let p: {title: TitleState, index: number} = $props()
 	let indexes = $derived(new Address([p.index], p.title.key))
@@ -17,8 +17,9 @@
 
 <style lang="scss">
 	.title {
-		font-family: "Bellefair", serif;
-		font-size: 2.6rem;
+		font-family: "Gambarino", serif;
+		font-size: 2rem;
+		color: var(--lighter);
 		padding: 2rem 0 0.8rem;
 		position: relative;
 

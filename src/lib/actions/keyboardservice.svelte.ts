@@ -1,4 +1,4 @@
-import {textEventsService} from "../services/TextEventsService.svelte";
+import {textEventsService} from "../services/KeyboardService.svelte.js";
 
 export function keyboardservice(node: Node) {
     textEventsService.listen()

@@ -1,5 +1,4 @@
-import type {Limit} from "../../services/TextEventsService.svelte";
-
+import type {Limit} from "../../services/KeyboardService.svelte.js";
 
 export function genKey() {
     const caracteres = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -11,25 +10,27 @@ export function genKey() {
     return resultado;
 }
 
-export class RemovalResult {
-    readonly length: number
-    readonly merged: boolean
-
-    constructor(success: boolean, length: number) {
-        this.length = length
-        this.merged = success
-    }
+export interface IState {
+    readonly key: string
 }
 
-export const FAILED_MERGE: Readonly<RemovalResult> = new RemovalResult(false, 0)
+export interface IBlockState extends IState {
+    readonly key: string
+    merge(other: IBlockState, start: Limit, end: Limit): number
+    getPathToLastLeaf(): number[]
+    getPathToFirstLeaf(): number[]
+}
 
-export interface State {
+export abstract class TextBlockState implements IBlockState {
     readonly key: string
 
-    empty: boolean
+    protected constructor() {
+        this.key = genKey()
+    }
 
-    crop(start: Limit | 0, end?: Limit): RemovalResult
-
-    merge(other: Readonly<State>, start: Limit | 0, end?: Limit): RemovalResult
-
+    abstract get length(): number
+    abstract remove(start: Limit | 0, end?: Limit): number
+    abstract merge(other: TextBlockState, start: Limit, end: Limit): number
+    abstract getPathToLastLeaf(): number[]
+    abstract getPathToFirstLeaf(): number[]
 }

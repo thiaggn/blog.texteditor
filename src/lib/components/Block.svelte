@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Title from "./Title.svelte";
 	import Paragraph from "./Paragraph.svelte";
-	import {TitleState} from "../../states/TitleState.svelte";
-	import {ParagraphState} from "../../states/ParagraphState.svelte";
-	import type {State} from "../../states/base/State";
-	let p: { block: State, index: number } = $props()
+	import {TitleState} from "../states/TitleState.svelte";
+	import {ParagraphState} from "../states/ParagraphState.svelte";
+	import type {IState} from "../states/base/State";
+	let p: { block: IState, index: number } = $props()
 </script>
 
-<div class="block" role="none">
+<div class="block" role="none" placeholder={p.block.key}>
 	<div class="content">
 		{#if p.block instanceof TitleState}
 			<Title title={p.block} index={p.index}/>
@@ -22,6 +22,11 @@
 		position: relative;
 		display: flex;
 
+		.index {
+			position: absolute;
+			left: 10px;
+			top:0 ;
+		}
 
 		&:hover {
 			outline: 1px solid rgba(255, 255, 255, 0.2);

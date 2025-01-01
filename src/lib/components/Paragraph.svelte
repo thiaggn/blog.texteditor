@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Word from "./Word.svelte";
-	import type {ParagraphState} from "../../states/ParagraphState.svelte";
+	import type {ParagraphState} from "../states/ParagraphState.svelte";
 
 	let p: { paragraph: ParagraphState, index: number } = $props()
 </script>

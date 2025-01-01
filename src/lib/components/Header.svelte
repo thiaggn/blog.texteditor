@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from "./Icon.svelte";
-	import {editorState} from "../states/base/EditorState.svelte.js";
+	import {editorState} from "../states/EditorState.svelte.js";
 
 </script>
 

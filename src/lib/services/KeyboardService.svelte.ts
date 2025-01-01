@@ -1,6 +1,6 @@
 import {Address} from "./AdressingService";
 import {snapshotService} from "./SnapshotService";
-import {editorState} from "../states/base/EditorState.svelte.js";
+import {editorState} from "../states/EditorState.svelte.js";
 import {Mode, selectionService} from "./SelectionService.svelte";
 
 enum Direction {
@@ -9,36 +9,40 @@ enum Direction {
 }
 
 export class Limit {
-    public address: Address
-    public offset: number
+    public indexes: number[]
+    public key: string
 
-    constructor(location: Address, offset: number) {
-        this.address = location
-        this.offset = offset
+    constructor(indexes: number[], key: string) {
+        this.indexes = indexes
+        this.key = key
+    }
+
+    public copy() {
+        return new Limit([...this.indexes], this.key)
     }
 
     get blockIndex() {
-        return this.address.indexes[0]
+        return this.indexes[0]
+    }
+
+    set blockIndex(value: number) {
+        this.indexes[0] = value
     }
 
     get wordIndex() {
-        return this.address.indexes[1]
+        return this.indexes[1]
     }
 
     set wordIndex(value: number) {
-        this.address.indexes[1] = value
+        this.indexes[1] = value
     }
 
-    get indexes(): number[] {
-        return this.address.indexes
+    get offset() {
+        return this.indexes[this.indexes.length - 1]
     }
 
-    get key(): string {
-        return this.address.key
-    }
-
-    set key(k: string) {
-        this.address.key = k
+    set offset(value: number) {
+        this.indexes[this.indexes.length - 1] = value
     }
 }
 
@@ -59,7 +63,7 @@ export class Selection {
     }
 }
 
-class TextEventsService {
+class KeyboardService {
     private evlistener: (ev: KeyboardEvent) => void
 
     constructor() {
@@ -67,13 +71,10 @@ class TextEventsService {
     }
 
     private async handleRemoval(sel: Selection, dir: Direction) {
-        if (sel.mode == Mode.Caret) {
-            sel.moveOffset(dir)
+        snapshotService.multiple(() => {
+            if (sel.mode == Mode.Caret) sel.moveOffset(dir)
             editorState.crop(sel.left, sel.right)
-
-        } else if (sel.mode == Mode.Range) {
-            editorState.crop(sel.left, sel.right)
-        }
+        })
     }
 
     private async handleKeyEvent(ev: KeyboardEvent): Promise<void> {
@@ -135,4 +136,4 @@ class TextEventsService {
     }
 }
 
-export const textEventsService = new TextEventsService()
+export const textEventsService = new KeyboardService()

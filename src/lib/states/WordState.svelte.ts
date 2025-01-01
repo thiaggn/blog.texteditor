@@ -1,6 +1,7 @@
-import {StringState} from "./base/StringState.svelte.js";
-import {FAILED_MERGE, genKey, RemovalResult, type State} from "./base/State";
-import {Limit} from "../services/TextEventsService.svelte";
+import {genKey, type IState} from "./base/State";
+import {snapshotService} from "../services/SnapshotService";
+import {Limit} from "../services/KeyboardService.svelte";
+
 
 export enum WordFormat {
     Bold,
@@ -9,37 +10,58 @@ export enum WordFormat {
     Code,
 }
 
-export class WordState extends StringState implements State {
+export class WordState implements IState {
     readonly format: WordFormat
     readonly key: string
+    private _value = $state("")
+    private _empty = $state(false)
 
     constructor(format: WordFormat, value: string) {
-        super(value);
         this.format = format
         this.key = genKey()
+        this._value = value
     }
 
-    private reinterpret(start: Limit | 0, end?: Limit): [Limit, Limit] {
-        if (start instanceof Limit && end == undefined)
-            return [start, new Limit(start.address, this.value.length)]
-
-        else if (start === 0 && end != undefined)
-            return [new Limit(end.address, 0), end]
-
-        else if (start instanceof Limit && end instanceof Limit)
-            return [start, end]
-
-        else throw new Error("unhandled case")
+    get length(): number {
+        return this._value.length
     }
 
-    public merge(other: Readonly<State>, start: Limit | 0, end?: Limit): RemovalResult {
-        [start, end] = this.reinterpret(start, end);
+    get value() {
+        return this._value
+    }
 
-        if (other instanceof WordState && other.format == this.format) {
-            let len = super.mergestr(other.value, start.offset, end.offset)
-            return new RemovalResult(true,len)
+    set value(v: string) {
+        const old = this._value
+        snapshotService.capture(() => this._value = old)
+        this._value = v
+    }
+
+    get empty() {
+        return this._empty
+    }
+
+    set empty(v: boolean) {
+        const old = this._empty
+        snapshotService.capture(() => this._empty = old)
+        this._empty = v
+    }
+
+    public remove(start: number, end: number = this.value.length): number {
+        const lv = this.value.slice(0, start)
+        const rv = this.value.slice(end)
+
+        this.value = lv + rv
+        return this.value.length
+    }
+
+    public merge(other: WordState, start: number, end: number): number {
+        if (other.format == this.format) {
+            let sv = this.value.slice(0, start)
+            let ev = other.value.slice(end)
+            this.value = sv + ev
+            return this.value.length
         }
 
-        return FAILED_MERGE
+        return 0
     }
 }

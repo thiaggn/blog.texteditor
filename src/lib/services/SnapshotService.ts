@@ -33,14 +33,20 @@ class SnapshotService {
         this.level = 0
     }
 
-    public beginGroup(): void {
+    public multiple(cb: () => void) {
+        this.beginGroup()
+        cb()
+        this.pushGroup()
+    }
+
+    private beginGroup(): void {
         if (this.group == null) {
             this.group = new Snapshot()
         }
         this.level++
     }
 
-    public pushGroup(): void {
+    private pushGroup(): void {
         if (this.group != null) {
             if (this.level == 1) {
                 this.effectivePush(this.group)
@@ -57,10 +63,9 @@ class SnapshotService {
         }
         this.snapshots.push(s)
         this.activeIndex = this.snapshots.length
-        console.log("(snapshot push) max:", this.snapshots.length, "active:", this.activeIndex)
     }
 
-    public push(f: RevertFunc): void {
+    public capture(f: RevertFunc): void {
         if (this.group == null) {
             if (this.timeout != undefined) clearTimeout(this.timeout)
             this.timeout = setTimeout(

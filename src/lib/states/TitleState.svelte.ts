@@ -1,16 +1,40 @@
-import {StringState} from "./base/StringState.svelte.js";
 import {snapshotService} from "../services/SnapshotService";
-import {FAILED_MERGE, genKey, RemovalResult, type State} from "./base/State";
-import  { Limit} from "../services/TextEventsService.svelte";
+import {TextBlockState} from "./base/State";
+import {Limit} from "../services/KeyboardService.svelte.js";
 
-export class TitleState extends StringState implements State {
+export class TitleState extends TextBlockState {
     private _size = $state<number>(1)
-    readonly key: string
+    private _empty = $state(false)
+    private _value = $state("")
 
     constructor(size: number, value: string) {
-        super(value)
+        super()
         this._size = size
-        this.key = genKey()
+        this._value = value
+    }
+
+    get length(): number {
+        return this._value.length
+    }
+
+    get value() {
+        return this._value
+    }
+
+    set value(v: string) {
+        const old = this._value
+        snapshotService.capture(() => this._value = old)
+        this._value = v
+    }
+
+    get empty() {
+        return this._empty
+    }
+
+    set empty(v: boolean) {
+        const old = this._empty
+        snapshotService.capture(() => this._empty = old)
+        this._empty = v
     }
 
     get size() {
@@ -19,20 +43,40 @@ export class TitleState extends StringState implements State {
 
     set size(v: number) {
         const old = this._size
-        snapshotService.push(() => this._size = old)
+        snapshotService.capture(() => this._size = old)
         this._size = v
     }
 
-    public merge(other: Readonly<State>, start: Limit | 0, end?: Limit): RemovalResult {
+    public remove(start: Limit | 0, end?: Limit): number {
+        if (start == 0 && end) {
+            start = end.copy()
+            start.offset = 0
+
+        } else if (start instanceof Limit && end == undefined) {
+            end = start.copy()
+            end.offset = this.length
+        } else throw new Error()
+
+        return this.merge(this, start, end)
+    }
+
+    public merge(other: TextBlockState, start: Limit, end: Limit): number {
         if (other instanceof TitleState) {
-            let s = start === 0 ? 0 : start.offset
-            let e = end ? end.offset : this.value.length
+            let sv = this.value.slice(0, start.offset)
+            let ev = other.value.slice(end.offset)
 
-            return new RemovalResult(true,
-                super.mergestr(other.value, s, e)
-            )
+            this.value = sv + ev
+            return this.value.length
         }
+        
+        return 0
+    }
 
-        return FAILED_MERGE
+    public getPathToLastLeaf(): number[] {
+        return [this.length];
+    }
+
+    public getPathToFirstLeaf(): number[] {
+        return [0];
     }
 }
