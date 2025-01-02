@@ -14,7 +14,7 @@ class SelectionService {
 
     }
 
-    public applyCollapsed(key: string, offset: number = 0) {
+    public collapse(key: string, offset: number = 0) {
         tick().then(() => {
             const el = document.getElementById(key)?.firstChild
             const s = window.getSelection()
@@ -23,8 +23,6 @@ class SelectionService {
                 s.setBaseAndExtent(
                     el, offset, el, offset
                 )
-            } else {
-                console.log("não conseguiu", el, s)
             }
         })
     }
@@ -72,4 +70,4 @@ class SelectionService {
 
 }
 
-export const selectionService = new SelectionService()
+export const selection = new SelectionService()

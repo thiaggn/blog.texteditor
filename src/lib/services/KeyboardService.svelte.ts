@@ -1,7 +1,7 @@
 import {Address} from "./AdressingService";
 import {snapshotService} from "./SnapshotService";
 import {editorState} from "../states/EditorState.svelte.js";
-import {Mode, selectionService} from "./SelectionService.svelte";
+import {Mode, selection} from "./SelectionService.svelte";
 
 enum Direction {
     Left,
@@ -44,22 +44,34 @@ export class Limit {
     set offset(value: number) {
         this.indexes[this.indexes.length - 1] = value
     }
+
+    public alsoTargets(l: Limit): boolean {
+        if (this.indexes.length != l.indexes.length)
+            return false
+
+        for (let i = 0; i < this.indexes.length-1; i++) {
+            if(this.indexes[i] != l.indexes[i])
+                return false
+        }
+
+        return true
+    }
 }
 
 export class Selection {
-    left: Limit
-    right: Limit
+    start: Limit
+    end: Limit
     mode: Mode
 
     constructor(l: Limit, r: Limit, mode: Mode) {
-        this.left = l
-        this.right = r
+        this.start = l
+        this.end = r
         this.mode = mode
     }
 
     public moveOffset(dir: Direction): void {
-        this.left.offset += dir == Direction.Left ? -1 : 0
-        this.right.offset += dir == Direction.Right ? +1 : 0
+        this.start.offset += dir == Direction.Left ? -1 : 0
+        this.end.offset += dir == Direction.Right ? +1 : 0
     }
 }
 
@@ -73,12 +85,13 @@ class KeyboardService {
     private async handleRemoval(sel: Selection, dir: Direction) {
         snapshotService.multiple(() => {
             if (sel.mode == Mode.Caret) sel.moveOffset(dir)
-            editorState.crop(sel.left, sel.right)
+
+            editorState.cut(sel.start, sel.end)
         })
     }
 
     private async handleKeyEvent(ev: KeyboardEvent): Promise<void> {
-        const sel = selectionService.capture()
+        const sel = selection.capture()
         let key = ev.key.toLowerCase()
 
         if (ev.ctrlKey) {

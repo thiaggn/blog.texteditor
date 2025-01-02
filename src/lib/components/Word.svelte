@@ -31,12 +31,10 @@
 
 		@keyframes blink {
 			from {
-				transform: translateX(-50%) translateY(-100%);
-				background: rgba(255, 255, 255, 0.4);
+				filter: brightness(0.4);
 			}
 			to {
-				background: rgba(255, 255, 255, 0.2);
-				transform: translateX(-50%) translateY(-25%);
+				transform: translateX(-50%) translateY(-90%);
 			}
 		}
 
@@ -49,7 +47,8 @@
 				width: 6px;
 				height: 6px;
 				border-radius: 100%;
-				background: rgba(255, 255, 0, 0.44);
+				background: #a4d76f;
+				transform: translateX(-50%) translateY(-60%);
 
 				animation-name: blink;
 				animation-duration: 500ms; /* Tempo total de cada ciclo */

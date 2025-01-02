@@ -1,6 +1,7 @@
-import {genKey, type IState} from "./base/State";
+import {genKey, type IState} from "./base/IState";
 import {snapshotService} from "../services/SnapshotService";
-import {Limit} from "../services/KeyboardService.svelte";
+import type {Limit} from "../services/KeyboardService.svelte";
+import {Result} from "./base/Result";
 
 
 export enum WordFormat {
@@ -30,7 +31,7 @@ export class WordState implements IState {
         return this._value
     }
 
-    set value(v: string) {
+    private set value(v: string) {
         const old = this._value
         snapshotService.capture(() => this._value = old)
         this._value = v
@@ -40,28 +41,26 @@ export class WordState implements IState {
         return this._empty
     }
 
-    set empty(v: boolean) {
+    set empty(value: boolean) {
         const old = this._empty
         snapshotService.capture(() => this._empty = old)
-        this._empty = v
+        this._empty = value
     }
 
-    public remove(start: number, end: number = this.value.length): number {
+    public cut(start: number, end: number = this.length): Result {
         const lv = this.value.slice(0, start)
         const rv = this.value.slice(end)
-
         this.value = lv + rv
-        return this.value.length
+        return new Result(true, this.length)
     }
 
-    public merge(other: WordState, start: number, end: number): number {
-        if (other.format == this.format) {
-            let sv = this.value.slice(0, start)
-            let ev = other.value.slice(end)
-            this.value = sv + ev
-            return this.value.length
-        }
 
-        return 0
+    public concat(other: WordState) {
+        if (other.format == this.format) {
+            this.value += other.value
+            return new Result(true, this.length)
+        }
+        return new Result(false, 0)
     }
 }
+

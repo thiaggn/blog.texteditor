@@ -3,7 +3,7 @@
 	import Paragraph from "./Paragraph.svelte";
 	import {TitleState} from "../states/TitleState.svelte";
 	import {ParagraphState} from "../states/ParagraphState.svelte";
-	import type {IState} from "../states/base/State";
+	import type {IState} from "../states/base/IState";
 	let p: { block: IState, index: number } = $props()
 </script>
 

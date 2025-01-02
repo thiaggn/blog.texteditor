@@ -1,6 +1,8 @@
 import {snapshotService} from "../services/SnapshotService";
-import {TextBlockState} from "./base/State";
 import {Limit} from "../services/KeyboardService.svelte.js";
+import type {IBlockState} from "./base/IBlockState";
+import {TextBlockState} from "./base/TextBlockState";
+import {Result} from "./base/Result";
 
 export class TitleState extends TextBlockState {
     private _size = $state<number>(1)
@@ -47,36 +49,19 @@ export class TitleState extends TextBlockState {
         this._size = v
     }
 
-    public remove(start: Limit | 0, end?: Limit): number {
-        if (start == 0 && end) {
-            start = end.copy()
-            start.offset = 0
 
-        } else if (start instanceof Limit && end == undefined) {
-            end = start.copy()
-            end.offset = this.length
-        } else throw new Error()
-
-        return this.merge(this, start, end)
+    public concat(other: IBlockState): Result {
+        return new Result(false, 0)
     }
 
-    public merge(other: TextBlockState, start: Limit, end: Limit): number {
-        if (other instanceof TitleState) {
-            let sv = this.value.slice(0, start.offset)
-            let ev = other.value.slice(end.offset)
-
-            this.value = sv + ev
-            return this.value.length
-        }
-        
-        return 0
+    public cut(start: 0 | Limit, end?: Limit): Result {
+        return this._cut(start == 0 ? 0 : start.offset, end ? end.offset : this.length)
     }
 
-    public getPathToLastLeaf(): number[] {
-        return [this.length];
-    }
-
-    public getPathToFirstLeaf(): number[] {
-        return [0];
+    private _cut(soff: number, eoff: number): Result {
+        const lv = this.value.slice(0, soff)
+        const rv = this.value.slice(eoff)
+        this.value = lv.concat(rv)
+        return new Result(true, this.length)
     }
 }

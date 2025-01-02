@@ -1,9 +1,11 @@
 import {ParagraphState} from "../states/ParagraphState.svelte";
 import {WordFormat, WordState} from "../states/WordState.svelte";
 import {TitleState} from "../states/TitleState.svelte";
-import type {IBlockState, IState} from "../states/base/State";
+import type {IState} from "../states/base/IState";
+import type {IBlockState} from "../states/base/IBlockState";
 
 export const BLOCKS_PLACEHOLDER: IBlockState[] = [
+    new TitleState(1, "Por que os Isomorfismos são Importantes?"),
     new TitleState(1, "Por que os Isomorfismos são Importantes?"),
     new ParagraphState([
         new WordState(WordFormat.Normal, "A utilidade dos "),
