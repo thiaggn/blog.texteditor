@@ -6,7 +6,6 @@ import {Result} from "./base/Result";
 import {Limit} from "../services/KeyboardService.svelte";
 import {selection} from "../services/SelectionService.svelte";
 
-
 export class ParagraphState extends TextBlockState {
     private _words = $state<WordState[]>([])
     private _empty = $state(false)
@@ -34,14 +33,24 @@ export class ParagraphState extends TextBlockState {
         return this._words
     }
 
-    private set words(value: WordState[]) {
-        if (value.length == 0) {
-            value.push(new WordState(WordFormat.Normal, ""))
-        }
+    private splice(start: number, delCount: number, ...other: WordState[]) {
+        const old = this.words.slice()
+        snapshotService.capture(() => this._words = old)
+        this.words.splice(start, delCount, ...other)
+    }
 
-        const curr = this._words
-        snapshotService.capture(() => this._words = curr)
-        this._words = value
+    private push(word: WordState) {
+        const old = this.words.slice()
+        snapshotService.capture(() => this._words = old)
+        this.words.push(word)
+    }
+
+    private _concat(other: WordState[]): void {
+        if (other.length == 0) return
+
+        const old = this.words.slice()
+        snapshotService.capture(() => this._words = old)
+        this._words = this.words.concat(other)
     }
 
     private get last(): WordState {
@@ -56,13 +65,17 @@ export class ParagraphState extends TextBlockState {
         if (other instanceof ParagraphState) {
             const sw = this.last
             const ew = other.first
+            const caret_index = sw.length
 
             if (sw.concat(ew).success) {
-                for(let i = 1; i < other.length; i++) {
-                    this.words.push(other.words[i])
-                }
+                this._concat(other.words.slice(1))
             }
-            else this.words.concat(other.words)
+            else {
+                this._concat(other.words)
+            }
+
+            selection.collapse(sw.key,  caret_index)
+            return new Result(true, this.length)
         }
 
         return new Result(false, 0)
@@ -76,14 +89,15 @@ export class ParagraphState extends TextBlockState {
 
         // caso 1: o corte é dentro da mesma palavra
         if (sw_idx == ew_idx && start.blockIndex == end.blockIndex) {
-            // tratamento: offset negativo
+            // caso sw_off < 0, então tem que reajustar para
+            // deletar o último caractere da palavra em this.words[sw_idx-1]
             if (sw_off < 0) {
                 if (sw_idx > 0) {
                     sw_idx = sw_idx - 1
                     ew_idx = sw_idx
                     ew_off = this.words[sw_idx].length
                     sw_off = ew_off - 1
-                } else throw new Error()
+                } else return new Result(false, this.length)
             }
             let sw = this.words[sw_idx]
 
@@ -98,9 +112,10 @@ export class ParagraphState extends TextBlockState {
             else {
                 if (sw.cut(sw_off, ew_off).length == 0) {
                     sw.empty = true
-                    selection.collapse(sw.key, sw_off+1)
+                    selection.collapse(sw.key, sw_off + 1)
+                } else  {
+                    selection.collapse(sw.key, sw_off)
                 }
-                else selection.collapse(sw.key, sw_off)
 
                 return new Result(true, this.length)
             }
@@ -114,22 +129,18 @@ export class ParagraphState extends TextBlockState {
         sw.cut(sw_off)
         ew.cut(0, ew_off)
 
-        if(sw.concat(ew).success) {
+        if (sw.concat(ew).success) {
             // se concatenou, então perdeu 1 word e precisa remontar o array
-            this.words.splice(sw_idx, del_count, sw)
-        }
-        else if (sw.length > 0 && ew.length > 0) {
+            this.splice(sw_idx, del_count, sw)
+        } else if (sw.length > 0 && ew.length > 0) {
             // mas se não concatenou e as 2 words tem letras, já estão atualizadas.
-        }
-        else if (sw.length > 0) {
-            this.words.splice(sw_idx, del_count, sw)
-        }
-        else if (ew.length > 0) {
-            this.words.splice(sw_idx, del_count, ew)
-        }
-        else {
+        } else if (sw.length > 0) {
+            this.splice(sw_idx, del_count, sw)
+        } else if (ew.length > 0) {
+            this.splice(sw_idx, del_count, ew)
+        } else {
             // as duas palavras foram removidas
-            this.words.splice(sw_idx, del_count)
+            this.splice(sw_idx, del_count)
         }
 
         selection.collapse(sw.key, sw_off)
@@ -139,14 +150,11 @@ export class ParagraphState extends TextBlockState {
     public cut(start: 0 | Limit, end?: Limit): Result {
         if (start != 0 && end) {
             // ok
-        }
-        else if (start == 0 && end) {
+        } else if (start == 0 && end) {
             start = new Limit([end.blockIndex, 0, 0], end.key)
-        }
-        else if (start != 0 && end == undefined) {
-            end = new Limit([start.blockIndex, this.length-1, this.last.length], start.key)
-        }
-        else throw new Error()
+        } else if (start != 0 && end == undefined) {
+            end = new Limit([start.blockIndex, this.length - 1, this.last.length], start.key)
+        } else throw new Error()
 
         return this._cut(start, end)
     }

@@ -9,8 +9,8 @@
 
 </script>
 
-<div class="title" class:first id={p.title.key}>
-	<div class="content" use:sharedstate="{indexes}">
+<div class="title" class:first>
+	<div class="content" use:sharedstate="{indexes}" id={p.title.key}>
 		{p.title.value}
 	</div>
 </div>

@@ -26,23 +26,32 @@ export class EditorState {
         return this._blocks
     }
 
-    set blocks(value: IBlockState[]) {
+    private splice(start: number, delCount: number, ...other: IBlockState[]) {
         const old = this._blocks.slice()
         snapshotService.capture(() => this._blocks = old)
-        this._blocks = value
+        this.blocks.splice(start, delCount, ...other)
     }
 
     public cut(start: Limit, end: Limit) {
-        let {blockIndex: sb_idx, offset: sb_off} = start
-        let {blockIndex: eb_idx, offset: eb_off} = end
+        let si = start.blockIndex
+        let ei = end.blockIndex
 
-        const sb = this.blocks[sb_idx]
-        const eb = this.blocks[eb_idx]
-        const del_count = eb_idx - sb_idx + 1
+        const sb = this.blocks[si]
+        const eb = this.blocks[ei]
+        const del_count = ei - si + 1
 
         if (sb instanceof TextBlockState && eb instanceof TextBlockState) {
-            if (sb_idx == eb_idx) {
-                sb.cut(start, end)
+            if (si == ei) {
+
+                if (sb.cut(start, end).fail && si > 0) {
+                    let pre_si = si - 1
+                    let pre_sb = this.blocks[pre_si]
+
+                    if (pre_sb.concat(sb).success) {
+                        this.splice(si, 1)
+                    }
+                }
+
                 return
             }
 
@@ -50,19 +59,19 @@ export class EditorState {
             eb.cut(0, end)
 
             if (sb.concat(eb).success) {
-                this.blocks.splice(sb_idx, del_count, sb)
+                this.splice(si, del_count, sb)
             }
             else if (sb.length > 0 && eb.length > 0) {
                 // ok, já está atualizado
             }
             else if (sb.length > 0) {
-                this.blocks.splice(sb_idx, del_count, sb)
+                this.splice(si, del_count, sb)
             }
             else if (eb.length > 0) {
-                this.blocks.splice(sb_idx, del_count, eb)
+                this.splice(si, del_count, eb)
             }
             else {
-                this.blocks.splice(sb_idx, del_count)
+                this.splice(si, del_count)
             }
         }
     }

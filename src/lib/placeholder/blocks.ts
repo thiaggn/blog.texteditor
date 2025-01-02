@@ -6,7 +6,7 @@ import type {IBlockState} from "../states/base/IBlockState";
 
 export const BLOCKS_PLACEHOLDER: IBlockState[] = [
     new TitleState(1, "Por que os Isomorfismos são Importantes?"),
-    new TitleState(1, "Por que os Isomorfismos são Importantes?"),
+    new TitleState(1, "Faber Castell."),
     new ParagraphState([
         new WordState(WordFormat.Normal, "A utilidade dos "),
         new WordState(WordFormat.Bold, "isomorfismos"),

@@ -3,6 +3,7 @@ import {Limit} from "../services/KeyboardService.svelte.js";
 import type {IBlockState} from "./base/IBlockState";
 import {TextBlockState} from "./base/TextBlockState";
 import {Result} from "./base/Result";
+import {selection} from "../services/SelectionService.svelte";
 
 export class TitleState extends TextBlockState {
     private _size = $state<number>(1)
@@ -49,8 +50,14 @@ export class TitleState extends TextBlockState {
         this._size = v
     }
 
-
     public concat(other: IBlockState): Result {
+        if (other instanceof TitleState) {
+            const caret_index = this.length
+            this.value = this.value.concat(other.value)
+            selection.collapse(this.key, caret_index)
+            return new Result(true, this.length)
+        }
+
         return new Result(false, 0)
     }
 
@@ -59,6 +66,11 @@ export class TitleState extends TextBlockState {
     }
 
     private _cut(soff: number, eoff: number): Result {
+
+        if (soff < 0) {
+            return new Result(false, 0)
+        }
+
         const lv = this.value.slice(0, soff)
         const rv = this.value.slice(eoff)
         this.value = lv.concat(rv)

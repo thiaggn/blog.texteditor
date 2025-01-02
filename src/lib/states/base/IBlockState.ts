@@ -8,4 +8,6 @@ export interface IBlockState extends IState {
     get length(): number
 
     concat(other: IBlockState): Result
+
+    cut(start: 0 |Limit, end?: Limit): Result
 }

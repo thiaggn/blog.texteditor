@@ -8,4 +8,8 @@ export class Result {
         this.success = succes
         this.length = length
     }
+
+    get fail():boolean {
+        return !this.success
+    }
 }
